@@ -1,0 +1,27 @@
+#include <stdio.h>
+
+int binario(int vet[], int inicio, int final, int procura){
+  int metade;
+  while(inicio <= final){
+    metade = (inicio + final) / 2;
+   
+    if(procura == vet[metade])
+      return metade;
+    
+      else if(procura < vet[metade])
+        return binario(vet, inicio, metade + 1, procura);
+
+        else
+          return binario(vet, inicio, metade - 1, procura);
+  }
+  return -1;
+}
+
+int main(){
+  int vetor[10] = {0,1,2,3,4,5,6,7,8,9};
+  int valor_procurado, n;
+  printf("Número a ser encontrado: ");
+  scanf("%d", &valor_procurado);
+  n = binario(vetor,  0,  9, valor_procurado);
+  printf("Valor encontrado: %d\n", n);
+}
