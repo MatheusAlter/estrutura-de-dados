@@ -1,0 +1,312 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include<string.h>
+
+typedef struct dataNo {
+    int identificador;
+    float preco;
+    int qt_estoque;
+    char fabricante[1000];
+    char tipo_produto[1000];
+    char descricao[1000];
+} DataNo;
+
+typedef struct no {
+    DataNo data;
+    struct no* proximo;
+} No;
+
+typedef struct lista_estoque {
+    int tamanho;
+    No* cabeca;
+} Lista;
+
+Lista* criar_lista();
+void inserir_inicio(Lista* lista, DataNo data);
+void imprimir_lista(Lista* lista);
+bool vazio(Lista* lista);
+No* naposicao(Lista* lista, int indice);
+void inserir_na_posicao(Lista* lista, DataNo data,int indice);
+void apagar_na_posicao(Lista* lista, int indice);
+int noindice(Lista* lista, No* no);
+void apagar_lista(Lista* lista);
+void trocar_no(Lista* lista, No* no1, No* no2);
+No* minimo(Lista* lista, int indice);
+No* maximo(Lista* lista, int indice);
+void organizar_lista(Lista* lista);
+
+Lista* criar_lista() {
+    Lista* lista = (Lista*) malloc(sizeof (Lista));
+    lista->tamanho = 0;
+    lista->cabeca = NULL;
+
+    return lista;
+}
+
+void inserir_inicio(Lista* lista, DataNo data) {
+    No* no = (No*) malloc(sizeof (No));
+    no->data = data;
+    no->proximo = lista->cabeca;
+    lista->cabeca = no;
+    lista->tamanho++;
+}
+
+void imprimir_lista(Lista* lista) {
+    if (vazio(lista)) {
+        printf("\nLista vazia.\n");
+        return;
+    }
+    No* temp = lista->cabeca;
+
+    while(temp != NULL){
+        printf("Numero do identificador: %d\n", temp->data.identificador);
+        printf("R$ = %.2f\n", temp->data.preco);
+        printf("Quantidade no estoque: %d\n", temp->data.qt_estoque);
+        printf("Fabricante: %s\n", temp->data.fabricante);
+        printf("Tipo do produto: %s\n", temp->data.tipo_produto);
+        printf("Descricao: %s\n", temp->data.descricao);
+        temp = temp->proximo;
+    };
+    printf("\n");
+
+}
+
+bool vazio(Lista* lista) {
+    return (lista->tamanho == 0);
+}
+
+void remover_inicio(Lista* lista){
+
+   if(!vazio(lista)){
+      No* temp = lista->cabeca;
+      lista->cabeca = temp->proximo;
+      free(temp);
+      lista->tamanho--;
+      }
+}
+
+No* naposicao(Lista* lista, int indice) {
+
+    if (indice >= 0 && indice < lista->tamanho) {
+        No* no = lista->cabeca;
+        int i;
+        for (i = 0; i < indice; i++) {
+            no = no->proximo;
+        }
+        return no;
+    }
+    printf("\nindice invalido.\n\n");
+    return NULL;
+}
+
+void apagar_na_posicao(Lista* lista, int indice){
+    if(indice == 0)
+    remover_inicio(lista);
+    else{
+        No* atual = naposicao(lista, indice);
+        if(atual != NULL){
+            No* anterior = naposicao(lista, indice -1);
+            anterior->proximo = atual->proximo;
+            free(atual);
+            lista->tamanho--;
+        }
+    }
+}
+
+void inserir_na_posicao(Lista* lista, DataNo data, int indice) {
+    No* atual;
+    if (indice == 0)
+        inserir_inicio(lista, data);
+    else {
+        atual = naposicao(lista, indice);
+        if (atual != NULL) {
+            No* anterior = naposicao(lista, indice - 1);
+            No* novo_no = (No*) malloc(sizeof (No));
+            novo_no->data = data;
+            anterior->proximo = novo_no;
+            novo_no->proximo = atual;
+            lista->tamanho++;
+        }
+    }
+}
+
+int noindice(Lista* lista, No* no){
+    if(no != NULL){
+        No* aux = lista->cabeca;
+        int indice = 0;
+        while(aux != no && aux != NULL){
+            aux = aux->proximo;
+            indice++;
+        }
+        if (aux != NULL)
+        return indice;
+    }
+    printf("\ninexistente.\n");
+    return -1;
+}
+
+void apagar_lista(Lista* lista){
+   if(!vazio(lista)){
+      No* temp = lista->cabeca;
+      while(temp != NULL){
+      lista->cabeca = temp->proximo;
+      free(temp);
+      temp = temp->proximo;
+      lista->tamanho--;
+      }
+  }
+}
+
+void trocar_no(Lista* lista, No* no1, No* no2){
+
+    if (no1 == no2)
+        return;
+
+    int indice1 = noindice(lista, no1);
+    int indice2 = noindice(lista, no2);
+
+    if (indice1 == -1 || indice2 == -1){
+        return;
+    }
+    if(indice1 > indice2){
+        no1 = no2;
+        no2 = naposicao(lista, indice1);
+
+        indice1 = indice2;
+        indice2 = noindice(lista, no2);
+    }
+    No* pb = naposicao(lista, indice2 - 1);
+
+    if (no1 == lista->cabeca){
+        lista->cabeca = no2;
+    }
+
+    else {
+        No* pa = naposicao(lista, indice1 - 1);
+        pa->proximo = no2;
+    }
+
+    pb->proximo = no1;
+
+    No* aux = no1->proximo;
+    no1->proximo = no2->proximo;
+    no2->proximo = aux;
+}
+
+No* minimo(Lista* lista, int indice){
+    No* aux = naposicao(lista, indice);
+
+    if (aux != NULL){
+        No* no_minimo = aux;
+        while(aux != NULL){
+            if(aux->data.identificador < no_minimo->data.identificador)
+                no_minimo = aux;
+
+            aux = aux->proximo;
+        }
+        return no_minimo;
+    }
+
+    return NULL;
+}
+
+
+void organizar_lista(Lista* lista){
+    int i;
+    for(i = 0; i < lista->tamanho - 1; i++){
+        trocar_no(lista, naposicao(lista, i), minimo(lista, i));
+    }
+
+}
+
+int main() {
+    Lista* list = criar_lista();
+    DataNo data;
+
+    float valor;
+    int pos, quantidade;
+    int id;
+    int opcao;
+    do {
+        printf(" \n Escolha uma das opcoes abaixo: ");
+        printf(" \n 0. Para sair.");
+        printf(" \n 1. Inserir no inicio.");
+        printf(" \n 2. imprimir lista.");
+        printf(" \n 3. Inserir na posicao.");
+        printf(" \n 4. Remover no inicio.");
+        printf(" \n 5. Remover na posicao.");
+        printf(" \n 6. Apagar lista.");
+        printf(" \n 7. Organizar lista em ordem crescente:");
+        printf("\n");
+        printf("Opcao escolhida: ");
+        scanf("%d%*c", &opcao);
+        switch (opcao) {
+            case 1:
+                printf("Insira o identificador:");
+                scanf("%d", &id);
+                data.identificador = id;
+                printf("Insira o valor: ");
+                scanf("%f", &valor);
+                data.preco = valor;
+                printf("Quantidade no estoque: ");
+                scanf("%d", &quantidade);
+                data.qt_estoque = quantidade;
+                printf("Nome do Fabricante: ");
+                scanf("%s", data.fabricante);
+                printf("Tipo de produto: ");
+                scanf("%s", data.tipo_produto);
+                printf("Descricao: ");
+                scanf("%s", data.descricao);
+                inserir_inicio(list, data);
+                break;
+            case 2:
+                printf("\n");
+                imprimir_lista(list);
+                break;
+            case 3:
+                printf("insira a posicao: ");
+                scanf("%d", &pos);
+                printf("Insira o identificador:");
+                scanf("%d", &id);
+                data.identificador = id;
+                printf("Insira o valor: ");
+                scanf("%f", &valor);
+                data.preco = valor;
+                printf("Quantidade no estoque: ");
+                scanf("%d", &quantidade);
+                data.qt_estoque = quantidade;
+                printf("Nome do Fabricante: ");
+                scanf("%s", data.fabricante);
+                printf("Tipo de produto: ");
+                scanf("%s", data.tipo_produto);
+                printf("Descricao: ");
+                scanf("%s", data.descricao);
+                inserir_na_posicao(list, data, pos);
+                break;
+
+            case 4:
+                remover_inicio(list);
+            break;
+
+            case 5:
+                printf("insira a posicao: ");
+                scanf("%d", &pos);
+                apagar_na_posicao(list, pos);
+            break;
+
+            case 6:
+                apagar_lista(list);
+            break;
+
+            case 7:
+                organizar_lista(list);
+            break;
+
+            default:
+                printf(" \nOpcao nao existente. ");
+                break;
+        }
+    }    while (opcao != 0);
+    return 0;
+}
